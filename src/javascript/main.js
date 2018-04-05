@@ -1,0 +1,4 @@
+/* APP Javascript */
+$(function() {
+    hello();
+});
