@@ -57,3 +57,24 @@ typings/
 # dotenv environment variables file
 .env
 
+# Modern Node.js patterns
+package-lock.json
+.npm
+.node_repl_history
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Development files
+.vscode/
+.idea/
+*.log
+
+# Build directory
+build/
+
+# Project management
+.claude/
+.claude.backup/
+dev-notes/
