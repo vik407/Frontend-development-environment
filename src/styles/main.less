@@ -1,0 +1,44 @@
+// Frontend Development Environment - Main Styles
+// Modern LESS template for educational development
+
+@import 'variables.less';
+
+// Base styles
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: @base-font-family;
+    font-size: @base-font-size;
+    line-height: @base-line-height;
+    color: @text-color;
+    background-color: @background-color;
+    margin: 0;
+    padding: @base-spacing;
+}
+
+h1 {
+    color: @primary-color;
+    font-size: 2.5rem;
+    margin-bottom: @base-spacing;
+    text-align: center;
+}
+
+// Component styles
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 @base-spacing;
+}
+
+// Responsive design helpers
+@media (max-width: 768px) {
+    body {
+        padding: @base-spacing / 2;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+}

@@ -1,24 +1,40 @@
 {
-  "name": "inss-volkswagenwebsite",
-  "version": "1.0.0",
-  "description": "Sitio Web Buses y camiones Volkswagen",
+  "name": "frontend-development-environment",
+  "version": "2.0.0",
+  "description": "Modern HTML + JavaScript + CSS development template with Pug templates and Gulp build system",
   "main": "gulpfile.js",
-  "dependencies": {
-    "browser-sync": "^2.23.6",
-    "gulp": "^3.9.1",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "gulp",
+    "build": "gulp build",
+    "clean": "gulp clean",
+    "test": "npm run build",
+    "start": "npm run dev"
+  },
+  "keywords": [
+    "frontend",
+    "template",
+    "pug",
+    "gulp",
+    "development",
+    "education"
+  ],
+  "devDependencies": {
+    "browser-sync": "^3.0.3",
+    "gulp": "^5.0.1",
     "gulp-clean": "^0.4.0",
     "gulp-concat": "^2.6.1",
-    "gulp-csso": "^3.0.1",
-    "gulp-imagemin": "^4.1.0",
-    "gulp-less": "^4.0.0",
-    "gulp-plumber": "^1.2.0",
-    "gulp-pug": "^3.3.0",
-    "gulp-sourcemaps": "^2.6.4",
-    "gulp-uglify": "^3.0.0"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "test": "gulp"
+    "gulp-csso": "^4.0.1",
+    "gulp-imagemin": "^7.1.0",
+    "gulp-less": "^5.0.0",
+    "gulp-plumber": "^1.2.1",
+    "gulp-pug": "^5.0.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-terser": "^2.1.0"
   },
   "author": "Victor Hernandez",
   "license": "ISC"

@@ -1,96 +1,124 @@
-var gulp = require('gulp');
-var pug = require('gulp-pug');
-var less = require('gulp-less');
-var clean = require('gulp-clean');
-var plumber = require('gulp-plumber');
-var imagemin = require('gulp-imagemin');
-var minifyCSS = require('gulp-csso');
-var uglify = require('gulp-uglify');
-var concat = require('gulp-concat');
-var sourcemaps = require('gulp-sourcemaps');
-var browserSync = require('browser-sync').create();
-var rootFiles = ['./src/*.*'];
-var vendorFiles = ['./src/vendor/**/*.*'];
-var reload = browserSync.reload;
-var stream = browserSync.stream();
+const gulp = require('gulp');
+const pug = require('gulp-pug');
+const less = require('gulp-less');
+const clean = require('gulp-clean');
+const plumber = require('gulp-plumber');
+const imagemin = require('gulp-imagemin');
+const minifyCSS = require('gulp-csso');
+const terser = require('gulp-terser');
+const concat = require('gulp-concat');
+const sourcemaps = require('gulp-sourcemaps');
+const browserSync = require('browser-sync');
 
-gulp.task('clean', function () {
-    return gulp.src('./build', { read: false })
+const bs = browserSync.create();
+const rootFiles = ['./src/*.*'];
+const vendorFiles = ['./src/vendor/**/*.*'];
+
+// Clean build directory
+function cleanTask() {
+    return gulp.src('./build', { read: false, allowEmpty: true })
         .pipe(clean())
         .pipe(plumber());
-});
+}
 
-gulp.task('move-root', function () {
+// Move root files to build
+function moveRoot() {
     return gulp.src(rootFiles)
         .pipe(gulp.dest('./build'))
         .pipe(plumber());
-});
+}
 
-gulp.task('move-vendor', function () {
+// Move vendor files to build
+function moveVendor() {
     return gulp.src(vendorFiles, { base: './src' })
         .pipe(gulp.dest('./build'))
         .pipe(plumber());
-});
+}
 
-gulp.task('html', function(){
-  return gulp.src(['src/templates/*.pug', '!./src/templates/**/_*.pug'])
-    .pipe(pug({ pretty: true }))
-    .pipe(gulp.dest('./build'))
-    .pipe(plumber());
-});
+// Compile Pug templates to HTML
+function html() {
+    return gulp.src(['src/templates/*.pug', '!./src/templates/**/_*.pug'])
+        .pipe(plumber())
+        .pipe(pug({ pretty: true }))
+        .pipe(gulp.dest('./build'));
+}
 
-gulp.task('css', function(){
-  return gulp.src('src/styles/*.less')
-    .pipe(less())
-    .pipe(plumber())
-    .pipe(minifyCSS())
-    .pipe(gulp.dest('./build/css'))
-    .pipe(stream);
-});
+// Compile LESS to CSS
+function css() {
+    return gulp.src('src/styles/*.less')
+        .pipe(plumber())
+        .pipe(sourcemaps.init())
+        .pipe(less())
+        .pipe(minifyCSS())
+        .pipe(sourcemaps.write('.'))
+        .pipe(gulp.dest('./build/css'))
+        .pipe(bs.stream());
+}
 
-gulp.task('js', function(){
-  return gulp.src('src/javascript/*.js')
-    .pipe(sourcemaps.init())
-    .pipe(plumber())
-    .pipe(concat('app.min.js'))
-    .pipe(sourcemaps.write())
-    .pipe(uglify())
-    .pipe(gulp.dest('./build/js'))
-});
-// create a task that ensures the `js` task is complete before
-// reloading browsers
-gulp.task('js-watch', ['js'], function (done) {
-    reload;
-    done();
-});
+// Concatenate and minify JavaScript
+function js() {
+    return gulp.src('src/javascript/*.js')
+        .pipe(plumber())
+        .pipe(sourcemaps.init())
+        .pipe(concat('app.min.js'))
+        .pipe(terser())
+        .pipe(sourcemaps.write('.'))
+        .pipe(gulp.dest('./build/js'));
+}
 
-gulp.task('img', () =>
-    gulp.src('src/images/**')
+// Optimize images
+function img() {
+    return gulp.src('src/images/**/*')
+        .pipe(plumber())
         .pipe(imagemin([
             imagemin.gifsicle({ interlaced: true }),
-            imagemin.jpegtran({ progressive: true }),
-            imagemin.optipng({ optimizationLevel: 5 })
+            imagemin.mozjpeg({ progressive: true }),
+            imagemin.optipng({ optimizationLevel: 5 }),
+            imagemin.svgo({
+                plugins: [
+                    { name: 'removeViewBox', active: false },
+                    { name: 'cleanupIDs', active: false }
+                ]
+            })
         ]))
-        .pipe(gulp.dest('./build/images'))
-);
-// Another one if a new image its added
-gulp.task('img-watch', ['img'], function (done) {
-    reload;
-    done();
-});
+        .pipe(gulp.dest('./build/images'));
+}
 
-
-
-gulp.task('default', ['move-root', 'move-vendor', 'html', 'css', 'js', 'img'], function () {
-    // Start Browser Sync
-    browserSync.init({
+// Development server with live reload
+function serve() {
+    bs.init({
         server: {
-            baseDir: "./build"
-        }
+            baseDir: './build'
+        },
+        port: 3000,
+        notify: false
     });
-    // Check for source changes
-    gulp.watch('src/styles/*.less', ['css']);
-    gulp.watch('src/templates/**', ['html']).on("change", reload);
-    gulp.watch('src/images/**', ['img-watch']);
-    gulp.watch('src/javascript/*.js', ['js-watch']);
-});
+
+    // Watch for changes
+    gulp.watch('src/styles/**/*.less', css);
+    gulp.watch('src/templates/**/*.pug', gulp.series(html, bs.reload));
+    gulp.watch('src/javascript/**/*.js', gulp.series(js, bs.reload));
+    gulp.watch('src/images/**/*', gulp.series(img, bs.reload));
+    gulp.watch(rootFiles.concat(vendorFiles), gulp.series(moveRoot, moveVendor, bs.reload));
+}
+
+// Build task for production
+const build = gulp.series(
+    cleanTask,
+    gulp.parallel(moveRoot, moveVendor, html, css, js, img)
+);
+
+// Export tasks
+exports.cleanTask = cleanTask;
+exports.moveRoot = moveRoot;
+exports.moveVendor = moveVendor;
+exports.html = html;
+exports.css = css;
+exports.js = js;
+exports.img = img;
+exports.serve = serve;
+exports.build = build;
+exports.clean = cleanTask;
+
+// Default development task
+exports.default = gulp.series(build, serve);
